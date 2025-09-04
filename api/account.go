@@ -10,7 +10,7 @@ import (
 
 type createAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
+	Currency string `json:"currency" binding:"required,currency"`
 }
 
 func (server *Server) CreateAccount(ctx *gin.Context) {
@@ -28,7 +28,8 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusBadRequest))
+		// internal error should respond with 500 both in HTTP code and payload status
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -52,11 +53,13 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 
 	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err == sql.ErrNoRows {
+			// not found
 			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusBadRequest))
+		// other errors -> internal server error
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -81,12 +84,12 @@ func (server *Server) ListAccount(ctx *gin.Context) {
 
 	arg := db.ListAccountsParams{
 		Limit:  int32(req.PageSize),
-		Offset: int32(req.PageID-1) + int32(req.PageSize),
+		Offset: int32((req.PageID - 1) * req.PageSize),
 	}
 
 	accounts, err := server.store.ListAccounts(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusBadRequest))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 

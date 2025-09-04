@@ -3,14 +3,14 @@ package util
 import (
 	"math/rand"
 	"strings"
-	"time"
+	// "time"
 )
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-func init() {
-	rand.Seed(time.Now().Unix())
-}
+// func init() {
+// 	rand.Seed(time.Now().Unix())
+// }
 
 // generate random integer between min and max
 func RandomInt(min, max int64) int64 {
@@ -40,7 +40,7 @@ func RandomMoney() int64 {
 }
 
 func RandomCurrency() string {
-	currencies := []string{"USD", "EUR", "CAD"}
+	currencies := []string{USD, EUR, CAD}
 	n := len(currencies)
 	return currencies[rand.Intn(n)]
 }
